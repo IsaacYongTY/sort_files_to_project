@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication
 import sys
+import this
 
 print('test')
 
@@ -20,7 +21,7 @@ class MyWindow(QMainWindow):
 
         self.selected_files_label = QtWidgets.QLabel(self)
         self.selected_files_label.setText("Path shown here")
-        self.selected_files_label.move(50,0)
+        self.selected_files_label.move
 
     def sort_files(self):
         self.button.setText('working')
