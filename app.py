@@ -1,9 +1,25 @@
-import os, shutil, re, zhon
+# -*- coding: utf-8 -*-
+
+import os, shutil, re, sys
 from os import path
 
 project_directories = []
 
-with open('project_directories.txt', 'r') as f:
+def get_correct_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath('.')
+    
+    return os.path.join(base_path, relative_path)
+
+relative_path = '.'
+directory = get_correct_path(relative_path)
+
+print(directory)
+
+
+with open(f'{directory}/project_directories.txt', 'r') as f:
     project_directories = f.read()
     project_directories = project_directories.split('\n')
 
@@ -22,9 +38,7 @@ def remove_affixes(input):
 
     return result
 
-
 def clean_up_text(input):
-
 
     filename = os.path.split(input)[1]
     filename = os.path.splitext(filename)[0]
@@ -52,8 +66,6 @@ def find_destination_main(song_title, project_directories):
 
     print("Folder doesn't exist")
     exit()
-
-
 
 def find_subfolder(destination_base, extension):
     if(extension == '.mp4' or extension == '.mov'):
@@ -95,7 +107,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
+        MainWindow.setObjectName("Sort Files to Project")
         MainWindow.resize(1000, 600)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -217,7 +229,6 @@ class Ui_MainWindow(object):
         self.actionPaste.setText(_translate("MainWindow", "Paste"))
         self.actionPaste.setStatusTip(_translate("MainWindow", "Paste the file"))
         self.actionPaste.setShortcut(_translate("MainWindow", "Ctrl+V"))
-
 
 if __name__ == "__main__":
     import sys
