@@ -2,6 +2,8 @@
 
 import os, shutil, re, sys
 from PyQt5 import QtWidgets, uic
+from PyQt5.QtWidgets import QMessageBox
+from hanziconv import HanziConv
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
@@ -51,7 +53,8 @@ class Ui(QtWidgets.QMainWindow):
                      '00_ARCHIVE',
                      '00_ARCHIVE/2018 and older',
                      '00_ARCHIVE/2019',
-                     '00_ARCHIVE/2020'
+                     '00_ARCHIVE/2020',
+                     '000_INCUBATOR'
                      ]
 
             for path in paths:
@@ -70,7 +73,7 @@ class Ui(QtWidgets.QMainWindow):
 
         return result
 
-    def clean_up_text(self, path):
+    def get_title_and_extension(self, path):
 
         filename = os.path.split(path)[1]
         filename = os.path.splitext(filename)[0]
@@ -84,8 +87,12 @@ class Ui(QtWidgets.QMainWindow):
         if song_title:
             print('Contains chinese characters')
             extension = os.path.splitext(path)[1]
+            song_title = HanziConv.toSimplified(song_title)
 
-        return song_title, extension
+            return song_title, extension
+
+        else:
+            return False
 
     def select_files(self):
         self.files = QtWidgets.QFileDialog.getOpenFileNames()[0]
@@ -108,11 +115,12 @@ class Ui(QtWidgets.QMainWindow):
         for directory in project_directories:
             for folder in os.listdir(directory):
                 if folder.find(song_title) >= 0:
-                    result = f'{directory}/{folder}'
-                    return result
 
-        print("Folder doesn't exist")
-        exit()
+                    result = f'{directory}/{folder}'
+
+                    return result
+        return False
+
 
     def find_subfolder(self, destination_base, extension):
         if extension == '.mp4' or extension == '.mov':
@@ -143,11 +151,8 @@ class Ui(QtWidgets.QMainWindow):
 
             return
 
-        if os.path.isdir(destination):
-            print(f'Path exist: {destination}')
-            shutil.move(source, destination)
-        else:
-            print('Destination folder does not exist, file is not moved')
+        shutil.move(source, destination)
+
 
     def sort_files(self, files):
         if not self.files:
@@ -158,23 +163,53 @@ class Ui(QtWidgets.QMainWindow):
             status_text = ''
             for file in files:
 
-                data = self.clean_up_text(file)
-                song_title = data[0]
-                extension = data[1]
-                destination_base = self.find_destination_main(song_title,self.project_directories)
+                data = self.get_title_and_extension(file)
 
-                destination = self.find_subfolder(destination_base, extension)
-                self.move_file(file, destination, extension)
+                if data:
+                    simplified_song_title = data[0]
+                    extension = data[1]
 
-                status_text += f'{os.path.split(file)[1]} moved to {destination}\n'
-                
-                self.operationStatusLabel.setText(status_text)
-                self.operationStatusLabel.repaint()
+                    destination_base = self.find_destination_main(simplified_song_title,self.project_directories)
+                    file_name = os.path.split(file)[1]
 
-                self.selectedFilesLabel.setText("Show the Files Here")
-                self.selectedFilesLabel.repaint()
+                    print(destination_base)
 
-                self.files = []
+                    status_text = ''
+
+                    if destination_base:
+
+                        destination_subfolder = self.find_subfolder(destination_base, extension)
+
+                        if not os.path.isdir(destination_subfolder):
+
+                            create_folder_message = QMessageBox.question(self, "Create subfolder", f"Target subfolder doesn't exist.\nDo you want to create {destination_subfolder} and move the file?", QMessageBox.No | QMessageBox.Yes, QMessageBox.Yes)
+
+                            if create_folder_message == QMessageBox.Yes:
+                                os.mkdir(destination_subfolder)
+
+                            else:
+                                status_text += f"Target subfolder doesn't exist for {file_name}. File is not moved.\n"
+
+                            print(f'Path exist: {destination_subfolder}')
+
+                        if os.path.isdir(destination_subfolder):
+                            self.move_file(file, destination_subfolder, extension)
+                            status_text += f'{file_name} moved to {destination_subfolder}\n'
+
+                    else:
+                        status_text += f"Destination doesn't exist for {file_name}. File is not moved.\n"
+
+
+                    self.operationStatusLabel.setText(status_text)
+                    self.operationStatusLabel.repaint()
+
+                    self.selectedFilesLabel.setText("Show the Files Here")
+                    self.selectedFilesLabel.repaint()
+
+                    self.files = []
+
+                else:
+                    self.operationStatusLabel.setText("Doesn't contain Chinese characters")
 
 
 if __name__ == "__main__":
