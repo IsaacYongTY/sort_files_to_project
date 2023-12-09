@@ -1,7 +1,7 @@
 altgraph==0.17
 macholib==1.14
 protobuf==3.14.0
-pyinstaller==4.2
+pyinstaller==5.13.1
 pyinstaller-hooks-contrib==2020.11
 PyQt5==5.15.2
 PyQt5-sip==12.8.1
